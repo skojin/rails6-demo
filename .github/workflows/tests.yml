@@ -1,0 +1,53 @@
+env:
+  RAILS_ENV: test
+  DATABASE_HOST: localhost
+  DATABASE_USER: postgres
+  RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+
+name: Test
+on: [push, pull_request]
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:11
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6.x
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -yqq install libpq-dev
+
+      - name: Setup cache key and directory for gems cache
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Bundle install
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Setup test database
+        run: |
+          bundle exec rails db:setup
+
+      - name: Tests
+        run: |
+          bundle exec rails test
