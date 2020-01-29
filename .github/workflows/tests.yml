@@ -64,7 +64,6 @@ jobs:
       - name: Tests
         run: |
           bundle exec rails test
-          bundle exec rails test:system
 
       - name: Rspec
         run: |
