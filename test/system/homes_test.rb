@@ -5,5 +5,6 @@ class HomesTest < ApplicationSystemTestCase
     visit root_url
 
     assert_selector "h1", text: "Hello"
+    assert_selector "#js_id", text: "by_js_inline"
   end
 end
